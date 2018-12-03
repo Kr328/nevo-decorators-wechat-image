@@ -1,0 +1,41 @@
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+repositories {
+    google()
+    jcenter()
+}
+
+if (!project.plugins.hasPlugin("com.android.feature")) apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 28
+        resConfigs "en", "zh"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'com.oasisfeng.nevo:sdk:1.1.1'
+    implementation 'androidx.core:core:1.0.1'
+    implementation 'net.sourceforge.streamsupport:android-retrostreams:1.7.0'
+}
