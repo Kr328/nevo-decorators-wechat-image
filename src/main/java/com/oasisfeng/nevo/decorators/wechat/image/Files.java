@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class Files {
-    public static ArrayList<File> walkFiles(File base) {
+    public static File[] walkFiles(File base) {
         ArrayList<File> result = new ArrayList<>();
         append(result ,base);
-        return result;
+        return result.toArray(new File[0]);
     }
 
     private static void append(ArrayList<File> output ,File base) {

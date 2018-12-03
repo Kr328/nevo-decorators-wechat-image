@@ -7,24 +7,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
-import android.os.FileObserver;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
-import androidx.annotation.WorkerThread;
+import java9.util.Comparators;
+import java9.util.stream.Stream;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
@@ -33,10 +28,6 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
  * Created by Oasis on 2018-8-7.
  */
 public class WeChatImageLoader {
-
-	private static final long MAX_TIME_DIFF = 2_000;
-	private static final File WECHAT_PATH = new File(Environment.getExternalStorageDirectory(), "/Tencent/MicroMsg");
-
 	static boolean isImagePlaceholder(final Context context, final String text) {
 		if (sPlaceholders == null) sPlaceholders = Arrays.asList(context.getResources().getStringArray(R.array.text_placeholders_for_picture));
 		return sPlaceholders.contains(text);	// Search throughout languages since WeChat can be configured to different language than current system language.
@@ -47,43 +38,17 @@ public class WeChatImageLoader {
 	File loadImage() {
 		if (mAccountRootPath == null) return null;
 		final long now = System.currentTimeMillis();
-		File path = mAccountRootPath;
 
-		while (path.isDirectory()) {
-			File best_match = null;
-			long best_time_diff = Long.MAX_VALUE;
-			for (final File child : path.listFiles()) {
-				final String name = child.getName();
-				final boolean is_file = child.isFile(), large = is_file && name.endsWith(".jpg");
-				if (is_file) {
-					if (! large && ! name.startsWith("th_")) continue;	// "th_xxx" is thumbnail.
-				} else if (! child.isDirectory()) continue;
-				final long time_diff = now - child.lastModified();
-				if (time_diff > 0 && time_diff < MAX_TIME_DIFF) {
-					if (large) {	// Always prefer large image
-						best_match = child;
-						break;
-					}
-					if (! is_file && Math.abs(time_diff - best_time_diff) < MAX_TIME_DIFF) return null;		// Drop indistinct case to avoid mismatch
-					if (time_diff >= best_time_diff) continue;
-					best_match = child;
-					best_time_diff = time_diff;
-				}
-			}
-			if (best_match == null) return null;
-			path = best_match;
-		}
-		Log.d(TAG, "Image loaded: " + path.getPath());
-
-		ArrayList list = new ArrayList();
-
-
-
-		return path;
+		return Stream.of(Files.walkFiles(mAccountRootPath))
+				.filter(File::isFile)
+				.filter(file -> file.getName().startsWith("th_"))
+				.map(file -> new AbstractMap.SimpleEntry<>(now - file.lastModified(), file))
+				.filter(entry -> 0 < entry.getKey() && entry.getKey() < MAX_TIME_DIFF)
+				.min(Comparators.comparing(AbstractMap.SimpleEntry::getKey))
+				.get().getValue();
 	}
 
-	WeChatImageLoader(final Context context) {
-		mContext = context;
+	WeChatImageLoader() {
 		File root = null;
 		final File[] files = WECHAT_PATH.listFiles();
 		if (files != null) for (final File file : files) {
@@ -96,28 +61,15 @@ public class WeChatImageLoader {
 		} else mAccountRootPath = new File(root, "image2");
 	}
 
-	@RequiresPermission(READ_EXTERNAL_STORAGE)
-	void startObserver() {
-		mObserver = new FileObserver(WECHAT_PATH.getAbsolutePath(), FileObserver.ALL_EVENTS) {
-
-			@WorkerThread @Override public void onEvent(final int event, final String path) {
-				final String msg = "Event " + event + ": " + path;
-				Log.i(TAG, msg);
-				mMainThreadHandler.post(() -> Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show());
-			}
-		};
-		mObserver.startWatching();
-	}
-
 	static PendingIntent buildPermissionRequest(final Context context) {
 		return PendingIntent.getActivity(context, 0, new Intent(context, WeChatImageLoader.PermissionRequestActivity.class), FLAG_UPDATE_CURRENT);
 	}
 
-	private final Context mContext;
-	private final Handler mMainThreadHandler = new Handler(Looper.getMainLooper());
+	private static final long MAX_TIME_DIFF = 2000;
+	private static final File WECHAT_PATH = new File(Environment.getExternalStorageDirectory(), "/Tencent/MicroMsg");
+
 	private final @Nullable File mAccountRootPath;
 	private static List<String> sPlaceholders;
-	@SuppressWarnings("FieldCanBeLocal") private FileObserver mObserver;	// FileObserver must be strong-referenced
 	private static final String TAG = "Nevo.WeChatPic";
 
 	public static class PermissionRequestActivity extends Activity {

@@ -37,7 +37,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image), WeChatImageLoader.buildPermissionRequest(this)).build());
 			return;
 		}
-		if (mImageLoader == null) mImageLoader = new WeChatImageLoader(this);
+		if (mImageLoader == null) mImageLoader = new WeChatImageLoader();
 		final File image = mImageLoader.loadImage();
 		if (image == null) return;
 
