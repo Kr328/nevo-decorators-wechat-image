@@ -31,14 +31,15 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 	@Override protected void apply(final MutableStatusBarNotification evolving) {
 		final MutableNotification n = evolving.getNotification();
 		final CharSequence text = n.extras.getCharSequence(Notification.EXTRA_TEXT);
+
 		if (text == null) return;
-		if (! WeChatImageLoader.isImagePlaceholder(this, text.toString())) return;
+		if (!WeChatImageUtils.isImagePlaceholder(this, text.toString())) return;
 		if (checkSelfPermission(READ_EXTERNAL_STORAGE) != PERMISSION_GRANTED) {
-			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image), WeChatImageLoader.buildPermissionRequest(this)).build());
+			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image), WeChatImageLoader.PermissionRequestActivity.buildPermissionRequest(this)).build());
 			return;
 		}
-		if (mImageLoader == null) mImageLoader = new WeChatImageLoader();
-		final File image = mImageLoader.loadImage();
+
+		final File image = WeChatImageLoader.loadImage();
 		if (image == null) return;
 
 		@SuppressLint("InlinedApi") final Parcelable[] messages = n.extras.getParcelableArray(Notification.EXTRA_MESSAGES);
@@ -57,6 +58,4 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			n.extras.putCharSequence(Notification.EXTRA_SUMMARY_TEXT, text);
 		}
 	}
-
-	private WeChatImageLoader mImageLoader;
 }

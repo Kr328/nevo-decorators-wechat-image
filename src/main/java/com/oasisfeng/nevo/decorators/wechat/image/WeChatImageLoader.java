@@ -12,14 +12,11 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
+import androidx.annotation.WorkerThread;
 import java9.util.Comparators;
-import java9.util.stream.Stream;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
@@ -28,51 +25,57 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
  * Created by Oasis on 2018-8-7.
  */
 public class WeChatImageLoader {
-	static boolean isImagePlaceholder(final Context context, final String text) {
-		if (sPlaceholders == null) sPlaceholders = Arrays.asList(context.getResources().getStringArray(R.array.text_placeholders_for_picture));
-		return sPlaceholders.contains(text);	// Search throughout languages since WeChat can be configured to different language than current system language.
-	}
-
+	@WorkerThread
 	@SuppressLint("MissingPermission")
 	@RequiresPermission(READ_EXTERNAL_STORAGE)
-	File loadImage() {
-		if (mAccountRootPath == null) return null;
-		final long now = System.currentTimeMillis();
+	static File loadImage() {
+		File accountRoot = findAccountRootDirectory();
+		if ( accountRoot == null ) {
+			Log.e(TAG, "No account path (32 hex chars) found in " + WECHAT_PATH);
+			return null;
+		}
 
-		return Stream.of(Files.walkFiles(mAccountRootPath))
+		long now = System.currentTimeMillis();
+
+		AbstractMap.SimpleEntry<Long ,File> result = FilesUtils.listEntry(new File(accountRoot ,"image2"))
 				.filter(File::isFile)
-				.filter(file -> file.getName().startsWith("th_"))
-				.map(file -> new AbstractMap.SimpleEntry<>(now - file.lastModified(), file))
+				.filter(file -> file.getName().startsWith("th_") || file.getName().endsWith(".jpg"))
+				.map(file -> new AbstractMap.SimpleEntry<>(now - file.lastModified(), file)) //Key: now - lastModified ,Value: File
 				.filter(entry -> 0 < entry.getKey() && entry.getKey() < MAX_TIME_DIFF)
 				.min(Comparators.comparing(AbstractMap.SimpleEntry::getKey))
-				.get().getValue();
+				.get();
+
+		if ( result == null )
+			return null;
+		return result.getValue();
 	}
 
-	WeChatImageLoader() {
-		File root = null;
-		final File[] files = WECHAT_PATH.listFiles();
-		if (files != null) for (final File file : files) {
-			if (file.getName().length() != 32) continue;		// All account paths are 32 hex chars.
-			if (root == null || file.lastModified() > root.lastModified()) root = file;
+	private static File findAccountRootDirectory() {
+		File[] files         = WECHAT_PATH.listFiles();
+		long   last_modified = 0;
+		File   result        = null;
+
+		for ( File f : files ) {
+			if ( f.getName().length() != 32 )
+				continue;
+			if ( f.lastModified() > last_modified ) {
+				last_modified = f.lastModified();
+				result = f;
+			}
 		}
-		if (root == null) {
-			mAccountRootPath = null;
-			Log.e(TAG, "No account path (32 hex chars) found in " + WECHAT_PATH);
-		} else mAccountRootPath = new File(root, "image2");
-	}
 
-	static PendingIntent buildPermissionRequest(final Context context) {
-		return PendingIntent.getActivity(context, 0, new Intent(context, WeChatImageLoader.PermissionRequestActivity.class), FLAG_UPDATE_CURRENT);
+		return result;
 	}
 
 	private static final long MAX_TIME_DIFF = 2000;
 	private static final File WECHAT_PATH = new File(Environment.getExternalStorageDirectory(), "/Tencent/MicroMsg");
 
-	private final @Nullable File mAccountRootPath;
-	private static List<String> sPlaceholders;
 	private static final String TAG = "Nevo.WeChatPic";
 
 	public static class PermissionRequestActivity extends Activity {
+		public static PendingIntent buildPermissionRequest(final Context context) {
+			return PendingIntent.getActivity(context, 0, new Intent(context, WeChatImageLoader.PermissionRequestActivity.class), FLAG_UPDATE_CURRENT);
+		}
 
 		@Override protected void onResume() {
 			super.onResume();
