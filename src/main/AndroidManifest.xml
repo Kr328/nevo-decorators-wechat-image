@@ -29,13 +29,23 @@
                  android:permission="com.oasisfeng.nevo.permission.BIND_DECORATOR_SERVICE"
                  android:label="@string/decorator_wechat_image_preview_title"
                  android:description="@string/decorator_wechat_image_preview_description">
-            <intent-filter android:priority="8">
+            <intent-filter android:priority="2">
                 <action android:name="com.oasisfeng.nevo.Decorator" />
             </intent-filter>
             <meta-data android:name="packages" android:value="com.tencent.mm" />
         </service>
 
         <activity android:name=".WeChatImageLoader$PermissionRequestActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
+
+        <provider
+            android:authorities="${applicationId}.wechat_root"
+            android:exported="false"
+            android:grantUriPermissions="true"
+            android:name="androidx.core.content.FileProvider">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/wechat_root" />
+        </provider>
 
     </application>
 

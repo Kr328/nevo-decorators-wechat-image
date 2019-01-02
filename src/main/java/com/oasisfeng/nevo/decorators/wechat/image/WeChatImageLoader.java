@@ -41,9 +41,10 @@ public class WeChatImageLoader {
 				.filter(File::isFile)
 				.filter(file -> file.getName().startsWith("th_") || file.getName().endsWith(".jpg"))
 				.map(file -> new AbstractMap.SimpleEntry<>(now - file.lastModified(), file)) //Key: now - lastModified ,Value: File
+				//.peek(file -> Log.i(TAG ,file.toString())
 				.filter(entry -> 0 < entry.getKey() && entry.getKey() < MAX_TIME_DIFF)
 				.min(Comparators.comparing(AbstractMap.SimpleEntry::getKey))
-				.get();
+				.orElseGet(() -> null);
 
 		if ( result == null )
 			return null;
@@ -67,7 +68,7 @@ public class WeChatImageLoader {
 		return result;
 	}
 
-	private static final long MAX_TIME_DIFF = 2000;
+	private static final long MAX_TIME_DIFF = 10000;
 	private static final File WECHAT_PATH = new File(Environment.getExternalStorageDirectory(), "/Tencent/MicroMsg");
 
 	private static final String TAG = "Nevo.WeChatPic";
