@@ -61,6 +61,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			last_message.putString(KEY_DATA_MIME_TYPE, "image/jpeg");
 			last_message.putParcelable(KEY_DATA_URI, Uri.fromFile(image));	// TODO: Keep image mapping for previous messages.
 			//grantNevoUriReadPermission(evolving.getKey() ,uri);
+			n.extras.putParcelableArray(Notification.EXTRA_MESSAGES, messages.clone());	// Use clone to tell the SDK it is actually changed.
 		} else if (messages == null || messages.length == 1) {
 			final BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inPreferredConfig = SDK_INT >= O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
