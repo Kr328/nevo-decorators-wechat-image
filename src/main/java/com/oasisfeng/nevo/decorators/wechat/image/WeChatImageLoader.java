@@ -56,6 +56,9 @@ public class WeChatImageLoader {
 		long   last_modified = 0;
 		File   result        = null;
 
+		if ( files == null )
+			return null;
+
 		for ( File f : files ) {
 			if ( f.getName().length() != 32 )
 				continue;

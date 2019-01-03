@@ -41,7 +41,8 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 		if (text == null) return;
 		if (!WeChatImageUtils.isImagePlaceholder(this, text.toString())) return;
 		if (checkSelfPermission(READ_EXTERNAL_STORAGE) != PERMISSION_GRANTED) {
-			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image), WeChatImageLoader.PermissionRequestActivity.buildPermissionRequest(this)).build());
+			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image),
+					WeChatImageLoader.PermissionRequestActivity.buildPermissionRequest(this)).build());
 			return;
 		}
 
@@ -56,12 +57,12 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			if (! (last instanceof Bundle)) return;
 			final Bundle last_message = (Bundle) last;
 			if (last_message.containsKey(KEY_DATA_MIME_TYPE) && last_message.containsKey(KEY_DATA_URI)) return;
-			//Uri uri = FileProvider.getUriForFile(this ,BuildConfig.APPLICATION_ID + ".wechat_root" ,image);
-			//Log.i(TAG ,"Uri = " + uri);
+			Uri uri = FileProvider.getUriForFile(this ,BuildConfig.APPLICATION_ID + ".wechat_root" ,image);
+			Log.i(TAG ,"Uri = " + uri);
 			last_message.putString(KEY_DATA_MIME_TYPE, "image/jpeg");
-			last_message.putParcelable(KEY_DATA_URI, Uri.fromFile(image));	// TODO: Keep image mapping for previous messages.
-			//grantNevoUriReadPermission(evolving.getKey() ,uri);
-			n.extras.putParcelableArray(Notification.EXTRA_MESSAGES, messages.clone());	// Use clone to tell the SDK it is actually changed.
+			last_message.putParcelable(KEY_DATA_URI, uri);	// TODO: Keep image mapping for previous messages.
+			grantNevoUriReadPermission(evolving.getKey() ,uri);
+			n.extras.putParcelableArray(Notification.EXTRA_MESSAGES, messages.clone()); // Use clone to tell the SDK it is actually changed.
 		} else if (messages == null || messages.length == 1) {
 			final BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inPreferredConfig = SDK_INT >= O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
