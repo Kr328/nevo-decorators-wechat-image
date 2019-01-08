@@ -1,6 +1,5 @@
 package com.oasisfeng.nevo.decorators.wechat.image;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -14,7 +13,6 @@ import java.io.File;
 import java.util.AbstractMap;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresPermission;
 import androidx.annotation.WorkerThread;
 import java9.util.Comparators;
 

@@ -1,14 +1,17 @@
 package com.oasisfeng.nevo.decorators.wechat.image;
 
-import android.telecom.Call;
+import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import static com.oasisfeng.nevo.decorators.wechat.image.Global.TAG;
 
 public class WeChatImageStack extends Thread {
-    private static final long LOAD_WAIT_MILLIS = 500;
+    private static final long LOAD_WAIT_MILLIS = 3000;
 
     enum State {
         WAIT ,
@@ -25,51 +28,65 @@ public class WeChatImageStack extends Thread {
         State  state;
         String key;
         int    id;
-        long   postTime;
-        Object attach;
+        long   post;
+        long   when;
+        File   result;
     }
 
-    public WeChatImageStack(Callback callback) {
+    WeChatImageStack(Callback callback) {
         this.callback = callback;
     }
 
-    public File getImageFileForKey(String key ,int id) {
+    File getImageFileForKey(String key ,int id) {
+        Log.d(TAG ,"Stack get " + key);
+
         synchronized (this) {
             StateRecord record = keyMap.get(key);
             if ( record != null && record.state == State.LOADED && record.id == id )
-                return (File) record.attach;
+                return record.result;
+
             return null;
         }
     }
 
-    public void postLoadImage(String key ,int id) {
+    void postLoadImage(String key ,int id ,long when) {
         long currentTime = System.currentTimeMillis();
 
         synchronized (this) {
             StateRecord record = new StateRecord();
 
-            record.state    = State.WAIT;
-            record.key      = key;
-            record.id       = id;
-            record.postTime = currentTime;
-            record.attach   = currentTime;
+            record.state = State.WAIT;
+            record.key   = key;
+            record.id    = id;
+            record.post  = currentTime;
+            record.when  = when;
 
             keyMap.put(key ,record);
+
+            this.notify();
         }
+
+        Log.d(TAG ,"Stack post " + key);
     }
 
-    public void remoteKey(String key) {
+    void removeKey(String key) {
         synchronized (this) {
             StateRecord stateRecord = keyMap.remove(key);
             if ( stateRecord != null )
                 stateRecord.state = State.REMOVED;
         }
+
+        Log.d(TAG ,"Stack remove " + key);
     }
 
     @Override
     public void run() {
-        //noinspection InfiniteLoopStatement
         while ( true ) {
+            Log.d(TAG ,"Stack loop");
+
+            if ( isInterrupted() )
+                return;
+
             long minimumWaitTime = -1;
             long currentTime = System.currentTimeMillis();
             ArrayList<StateRecord> stateRecords = new ArrayList<>();
@@ -79,14 +96,14 @@ public class WeChatImageStack extends Thread {
                     if ( entry.getValue().state != State.WAIT )
                         continue;
 
-                    long postLoadTime = (long) entry.getValue().postTime;
+                    long postLoadTime = entry.getValue().post;
 
                     if ( postLoadTime + LOAD_WAIT_MILLIS < currentTime ) {
                         stateRecords.add(entry.getValue());
                         entry.getValue().state = State.LOADING;
                     }
                     else
-                        minimumWaitTime = postLoadTime;
+                        minimumWaitTime = postLoadTime + LOAD_WAIT_MILLIS;
                 }
 
                 try {
@@ -94,7 +111,7 @@ public class WeChatImageStack extends Thread {
                         if ( minimumWaitTime == -1 )
                             this.wait();
                         else
-                            this.wait(minimumWaitTime + LOAD_WAIT_MILLIS - currentTime);
+                            this.wait(minimumWaitTime - currentTime);
                     }
                 } catch (InterruptedException e) {
                     continue;
@@ -102,14 +119,23 @@ public class WeChatImageStack extends Thread {
             }
 
             for ( StateRecord stateRecord : stateRecords ) {
-                File file = wechatImageLoader.loadImage(stateRecord.postTime);
+                File file = wechatImageLoader.loadImage(stateRecord.when);
 
                 synchronized (this) {
                     if ( stateRecord.state != State.LOADING )
                         continue;
 
-                    stateRecord.attach = file;
+                    if ( file == null ) {
+                        Log.w(TAG ,"Load image failure");
+                        keyMap.remove(stateRecord.key);
+                        stateRecord.state = State.REMOVED;
+                        continue;
+                    }
+
+                    stateRecord.result = file;
                     stateRecord.state  = State.LOADED;
+
+                    callback.onImageLoaded(stateRecord.key ,stateRecord.id);
                 }
             }
         }
