@@ -26,21 +26,17 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
  */
 public class WeChatImageLoader {
 	@WorkerThread
-	@SuppressLint("MissingPermission")
-	@RequiresPermission(READ_EXTERNAL_STORAGE)
-	static File loadImage() {
+	File loadImage(long time) {
 		File accountRoot = findAccountRootDirectory();
 		if ( accountRoot == null ) {
 			Log.e(TAG, "No account path (32 hex chars) found in " + WECHAT_PATH);
 			return null;
 		}
 
-		long now = System.currentTimeMillis();
-
 		AbstractMap.SimpleEntry<Long ,File> result = FilesUtils.listEntry(new File(accountRoot ,"image2"))
 				.filter(File::isFile)
 				.filter(file -> file.getName().startsWith("th_") || file.getName().endsWith(".jpg"))
-				.map(file -> new AbstractMap.SimpleEntry<>(now - file.lastModified(), file)) //Key: now - lastModified ,Value: File
+				.map(file -> new AbstractMap.SimpleEntry<>(time - file.lastModified(), file)) //Key: now - lastModified ,Value: File
 				//.peek(file -> Log.i(TAG ,file.toString())
 				.filter(entry -> 0 < entry.getKey() && entry.getKey() < MAX_TIME_DIFF)
 				.min(Comparators.comparing(AbstractMap.SimpleEntry::getKey))
@@ -51,7 +47,7 @@ public class WeChatImageLoader {
 		return result.getValue();
 	}
 
-	private static File findAccountRootDirectory() {
+	private File findAccountRootDirectory() {
 		File[] files         = WECHAT_PATH.listFiles();
 		long   last_modified = 0;
 		File   result        = null;
