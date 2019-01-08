@@ -46,7 +46,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			return;
 		}
 
-		final File image = WeChatImageLoader.loadImage();
+		final File image = null;//WeChatImageLoader.loadImage();
 		if (image == null) return;
 
 		Log.i(TAG ,"Image Load " + image);
@@ -88,4 +88,6 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 	}
 
 	private HashMap<String ,Uri> grantedUriMap = new HashMap<>();
+	private WeChatImageStack imageStack = new WeChatImageStack((key ,id) ->
+			recastNotification(key ,null));
 }
