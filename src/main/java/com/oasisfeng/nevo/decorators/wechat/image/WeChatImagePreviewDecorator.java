@@ -49,7 +49,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 		if (!WeChatImageUtils.isImagePlaceholder(this, text.toString())) return;
 		if (checkSelfPermission(READ_EXTERNAL_STORAGE) != PERMISSION_GRANTED) {
 			n.addAction(new Notification.Action.Builder(null, getText(R.string.action_preview_image),
-					WeChatImageLoader.PermissionRequestActivity.buildPermissionRequest(this)).build());
+					PermissionRequestActivity.buildPermissionRequest(this)).build());
 			return;
 		}
 
@@ -73,10 +73,12 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 					BuildConfig.APPLICATION_ID + ".wechat_root" ,
 					image);
 
+			Log.i(Global.TAG ,"Loaded " + uri);
+
 			if ( applyMessageStyle((Bundle) last_message ,uri ,key) )
 				notification.extras.putParcelableArray(Notification.EXTRA_MESSAGES ,messages.clone());
 		} else
-			imageStack.postLoadImage(key ,index ,notification.when);
+			imageStack.postLoadImage(key ,index);
 
 		return true;
 	}
@@ -85,7 +87,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 		File image = imageStack.getImageFileForKey(key ,0);
 
 		if ( image == null )
-			imageStack.postLoadImage(key ,0 ,n.when);
+			imageStack.postLoadImage(key ,0);
 		else
 			applyNormal(n ,n.extras.getCharSequence(Notification.EXTRA_TEXT) ,image);
 

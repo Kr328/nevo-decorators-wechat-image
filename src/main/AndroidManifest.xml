@@ -15,7 +15,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-          package="com.oasisfeng.nevo.decorators.wechat.image" android:versionCode="18000" android:versionName="1.8">
+          package="com.oasisfeng.nevo.decorators.wechat.image" android:versionCode="19000" android:versionName="1.9">
 
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- To install dummy apk on devices without Google Play Store -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />    <!-- WeChatPictureLoader -->
@@ -35,7 +35,7 @@
             <meta-data android:name="packages" android:value="com.tencent.mm" />
         </service>
 
-        <activity android:name=".WeChatImageLoader$PermissionRequestActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
+        <activity android:name=".PermissionRequestActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
 
         <provider
             android:authorities="${applicationId}.wechat_root"
