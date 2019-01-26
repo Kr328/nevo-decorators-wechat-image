@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,13 +20,14 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 
 /**
  * Created by Oasis on 2018-8-7.
+ * Modify by Kr328 on 2019-1-1
  */
 public class WeChatImageLoader {
 	@WorkerThread
 	File loadImage(long time) {
 		File accountRoot = findAccountRootDirectory();
 		if ( accountRoot == null ) {
-			Log.e(TAG, "No account path (32 hex chars) found in " + WECHAT_PATH);
+			Log.e(TAG, "No account path (32 hex chars) found in " + WeChatImageDirectoryObserver.WECHAT_PATH);
 			return null;
 		}
 
@@ -46,7 +46,7 @@ public class WeChatImageLoader {
 	}
 
 	private File findAccountRootDirectory() {
-		File[] files         = WECHAT_PATH.listFiles();
+		File[] files         = WeChatImageDirectoryObserver.WECHAT_PATH.listFiles();
 		long   last_modified = 0;
 		File   result        = null;
 
@@ -66,7 +66,6 @@ public class WeChatImageLoader {
 	}
 
 	private static final long MAX_TIME_DIFF = 10000;
-	private static final File WECHAT_PATH = new File(Environment.getExternalStorageDirectory(), "/Tencent/MicroMsg");
 
 	private static final String TAG = "Nevo.WeChatPic";
 

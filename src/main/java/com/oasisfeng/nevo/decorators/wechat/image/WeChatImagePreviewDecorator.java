@@ -68,19 +68,15 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 		if (!(last_message instanceof Bundle)) return false;
 		File image = imageStack.getImageFileForKey(key ,index);
 
-		if ( image == null ) {
-			imageStack.postLoadImage(key ,index ,notification.when);
-		}
-		else {
+		if (image != null) {
 			Uri uri = FileProvider.getUriForFile(this ,
 					BuildConfig.APPLICATION_ID + ".wechat_root" ,
 					image);
 
-			Log.i(Global.TAG ,"Uri = " + uri);
-
 			if ( applyMessageStyle((Bundle) last_message ,uri ,key) )
 				notification.extras.putParcelableArray(Notification.EXTRA_MESSAGES ,messages.clone());
-		}
+		} else
+			imageStack.postLoadImage(key ,index ,notification.when);
 
 		return true;
 	}
@@ -97,7 +93,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 	}
 
 	private boolean applyMessageStyle(Bundle data ,Uri uri ,String key) {
-		//if (data.containsKey(KEY_DATA_MIME_TYPE) && data.containsKey(KEY_DATA_URI)) return false;
+		if (data.containsKey(KEY_DATA_MIME_TYPE) && data.containsKey(KEY_DATA_URI)) return false;
 		grantUriReadPermission(key ,uri);
 		data.putString(KEY_DATA_MIME_TYPE, "image/jpeg");
 		data.putParcelable(KEY_DATA_URI, uri);
