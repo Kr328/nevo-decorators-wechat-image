@@ -27,9 +27,9 @@ public class WeChatImageStack extends Thread {
     private class StateRecord {
         State  state;
         String key;
-        String directory;
         int    id;
         long   post;
+        long   when;
         File   result;
     }
 
@@ -49,7 +49,7 @@ public class WeChatImageStack extends Thread {
         }
     }
 
-    void postLoadImage(String key ,int id) {
+    void postLoadImage(String key ,int id ,long when) {
         if ( !wechatImageLoader.tryInitialize() )
             return;
 
@@ -61,8 +61,8 @@ public class WeChatImageStack extends Thread {
             record.state     = State.WAIT;
             record.key       = key;
             record.id        = id;
-            record.directory = wechatImageLoader.getCurrentDirectory();
             record.post      = currentTime;
+            record.when      = when;
 
             keyMap.put(key ,record);
 
@@ -122,7 +122,7 @@ public class WeChatImageStack extends Thread {
             }
 
             for ( StateRecord stateRecord : stateRecords ) {
-                File file = wechatImageLoader.loadImage(stateRecord.post ,stateRecord.directory);
+                File file = wechatImageLoader.loadImage(stateRecord.when);
 
                 synchronized (this) {
                     if ( stateRecord.state != State.LOADING )

@@ -78,7 +78,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 			if ( applyMessageStyle((Bundle) last_message ,uri ,key) )
 				notification.extras.putParcelableArray(Notification.EXTRA_MESSAGES ,messages.clone());
 		} else
-			imageStack.postLoadImage(key ,index);
+			imageStack.postLoadImage(key ,index ,notification.when);
 
 		return true;
 	}
@@ -87,7 +87,7 @@ public class WeChatImagePreviewDecorator extends NevoDecoratorService {
 		File image = imageStack.getImageFileForKey(key ,0);
 
 		if ( image == null )
-			imageStack.postLoadImage(key ,0);
+			imageStack.postLoadImage(key ,0 ,n.when);
 		else
 			applyNormal(n ,n.extras.getCharSequence(Notification.EXTRA_TEXT) ,image);
 

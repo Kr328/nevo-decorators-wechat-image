@@ -6,10 +6,11 @@ import java.util.ArrayList;
 import java9.util.stream.Stream;
 
 class FilesUtils {
-    static Stream<File> listEntry(File base) {
+    static Stream<File> listAllFrom(File... dirs) {
         Stream.Builder<File> builder = Stream.builder();
 
-        listFiles(builder ,base);
+        for ( File base : dirs )
+            listFiles(builder ,base);
 
         return builder.build();
     }

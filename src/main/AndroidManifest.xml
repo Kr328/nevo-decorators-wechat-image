@@ -15,7 +15,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-          package="com.oasisfeng.nevo.decorators.wechat.image" android:versionCode="19000" android:versionName="1.9">
+          package="com.oasisfeng.nevo.decorators.wechat.image" android:versionCode="19001" android:versionName="1.9.1">
 
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- To install dummy apk on devices without Google Play Store -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />    <!-- WeChatPictureLoader -->

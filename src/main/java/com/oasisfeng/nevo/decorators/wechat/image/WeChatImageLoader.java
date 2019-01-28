@@ -5,10 +5,10 @@ import android.util.Log;
 
 import java.io.File;
 import java.util.AbstractMap;
-import java.util.regex.Pattern;
 
 import androidx.annotation.WorkerThread;
 import java9.util.Comparators;
+import java9.util.stream.Stream;
 
 /**
  * Created by Oasis on 2018-8-7.
@@ -16,19 +16,19 @@ import java9.util.Comparators;
  */
 public class WeChatImageLoader {
 	private static final long MAX_TIME_DIFF = 8000;
-	private static String currentImageDirectory = "";
 
-	private WeChatImageDirectoryObserver directoryObserver = new WeChatImageDirectoryObserver(this::onImageDirectoryChanged);
+	private WeChatImageDirectoryObserver directoryObserver = new WeChatImageDirectoryObserver();
 
 	boolean tryInitialize() {
 		return directoryObserver.tryInitialize();
 	}
 
 	@WorkerThread
-	File loadImage(long time ,String directory) {
-		Log.i(Global.TAG ,"Try load from " + directory + " directoryObserver " + directoryObserver.hasObserver());
-
-		AbstractMap.SimpleEntry<Long ,File> result = FilesUtils.listEntry(new File(directory))
+	File loadImage(long time) {
+		AbstractMap.SimpleEntry<Long ,File> result = FilesUtils.listAllFrom(
+							Stream.of(directoryObserver.getAccountDirectories().toArray(new String[0]))
+									.map(s -> new File(s + "/image2")).toArray(File[]::new)
+				)
 				.filter(File::isFile)
 				.filter(file -> file.getName().startsWith("th_") || file.getName().endsWith(".jpg"))
 				.map(file -> new AbstractMap.SimpleEntry<>(time - file.lastModified(), file)) //Key: now - lastModified ,Value: File
@@ -40,15 +40,5 @@ public class WeChatImageLoader {
 		if ( result == null )
 			return null;
 		return result.getValue();
-	}
-
-	synchronized String getCurrentDirectory() {
-		return currentImageDirectory;
-	}
-
-	private synchronized void onImageDirectoryChanged(int event ,String path) {
-		if ( event == FileObserver.CREATE && new File(path).isDirectory() )
-			currentImageDirectory = path;
-		Log.i(Global.TAG ,"Event " + path);
 	}
 }
