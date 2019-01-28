@@ -63,14 +63,15 @@ public class WeChatImageDirectoryObserver {
 
     private void handleAccountCreated(String accountId) {
         Log.i(Global.TAG ,"AccountCreated " + accountId);
-        FileObserver observer = new FileObserver(new File(WECHAT_PATH ,accountId + "/image2").getAbsolutePath() ,FileObserver.CREATE | FileObserver.DELETE) {
+        FileObserver observer = new FileObserver(new File(WECHAT_PATH ,accountId + "/image2").getAbsolutePath() ,FileObserver.ACCESS | FileObserver.CREATE) {
             @Override
             public void onEvent(int event, @Nullable String path) {
-                event &= ACCESS;
+                event &= ACCESS | CREATE;
 
                 Log.i(Global.TAG ,"Image directory " + path);
 
                 switch (event) {
+                    case CREATE:
                     case ACCESS:
                         if ( PATTERN_WECHAT_IMAGE_DIRECTORY.matcher(path).matches() )
                             callback.onDirectoryChanged(event ,WECHAT_PATH.getAbsolutePath() + "/" + accountId + "/image2/" + path);
