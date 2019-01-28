@@ -47,7 +47,7 @@ public class WeChatImageLoader {
 	}
 
 	private synchronized void onImageDirectoryChanged(int event ,String path) {
-		if ( event == FileObserver.CREATE && new File(path).isDirectory() )
+		if ( event == FileObserver.ACCESS && new File(path).isDirectory() )
 			currentImageDirectory = path;
 		Log.i(Global.TAG ,"Event " + path);
 	}
