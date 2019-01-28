@@ -5,6 +5,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.UserManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,6 +21,10 @@ public class PermissionRequestActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !getSystemService(UserManager.class).isUserUnlocked())
+            return;
+
         if (checkSelfPermission(READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(), getText(R.string.toast_image_preview_activated), Toast.LENGTH_LONG).show();
             finish();
